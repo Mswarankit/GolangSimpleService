@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"net/http"
-	"user-service/internal/store"
 
 	"github.com/Mswarankit/user-service/internal/models"
+	"github.com/Mswarankit/user-service/internal/store"
 	"github.com/gin-gonic/gin"
 )
 
