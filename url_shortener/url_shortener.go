@@ -48,31 +48,31 @@ func (us *URLShortener) generateShortURL(url string) string {
 }
 
 func (us *URLShortener) extractDomain(url string) string {
-	parts := strings.Split(strings.TrimPrefix(url, "http://"), "/")
+	parts := strings.Split(strings.TrimPrefix(url, "https://"), "/")
 	return strings.TrimPrefix(parts[0], "www.")
 }
 
 func (us *URLShortener) handleShorten(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var req ShortenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	us.mutex.Lock()
 	defer us.mutex.Unlock()
 
+	// Check if URL already exists in cache
+	if shortURL, exists := us.urlCache[req.URL]; exists {
+		json.NewEncoder(w).Encode(ShortenResponse{ShortURL: shortURL})
+		return
+	}
+
+	// Generate new short URL
 	shortURL := us.generateShortURL(req.URL)
 	us.urls[shortURL] = req.URL
 	us.urlCache[req.URL] = shortURL
 
-	//updating my domain statistics
-	domain := us.extractDomain(req.URL)
-	us.stats[domain]++
 	json.NewEncoder(w).Encode(ShortenResponse{ShortURL: shortURL})
 }
 
