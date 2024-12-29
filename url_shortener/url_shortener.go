@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -73,4 +74,37 @@ func (us *URLShortener) handleShorten(w http.ResponseWriter, r *http.Request) {
 	domain := us.extractDomain(req.URL)
 	us.stats[domain]++
 	json.NewEncoder(w).Encode(ShortenResponse{ShortURL: shortURL})
+}
+
+func (us *URLShortener) handleRedirect(w http.ResponseWriter, r *http.Request) {
+	shortURL := strings.TrimPrefix(r.URL.Path, "/")
+	us.mutex.RLock()
+	longURL, exists := us.urls[shortURL]
+	us.mutex.RUnlock()
+
+	if !exists {
+		http.Error(w, "URL not found", http.StatusNotFound)
+		return
+	}
+	http.Redirect(w, r, longURL, http.StatusMovedPermanently)
+}
+
+func (us *URLShortener) handleMetrics(w http.ResponseWriter, r *http.Request) {
+	us.mutex.RLock()
+	defer us.mutex.RUnlock()
+
+	var domains []DomainStat
+	for domain, count := range us.stats {
+		domains = append(domains, DomainStat{Domain: domain, Count: count})
+	}
+
+	sort.Slice(domains, func(i, j int) bool {
+		return domains[i].Count > domains[j].Count
+	})
+
+	if len(domains) > 3 {
+		domains = domains[:3]
+	}
+
+	json.NewEncoder(w).Encode(MetricsResponse{TopDomains: domains})
 }
