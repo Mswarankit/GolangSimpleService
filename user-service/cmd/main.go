@@ -21,8 +21,8 @@ func main() {
 	router.Use(middleware.BasicAuth())
 
 	router.POST("/users", userHandler.CreateUser)
-	router.POST("/users/:id", userHandler.GetUser)
-	router.POST("/users", userHandler.ListUser)
+	router.GET("/users/:id", userHandler.GetUser)
+	router.GET("/users", userHandler.ListUser)
 
 	addr := fmt.Sprintf(":%d", *port)
 	router.Run(addr)
