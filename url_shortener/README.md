@@ -6,7 +6,7 @@ To run this url-shortener
 go run main.go url_shortener.go
 ```
 
-1. Shorten URL
+__Shorten URL__
 
 ##### Request
 ```
@@ -33,7 +33,7 @@ curl --location --request GET 'http://localhost:8080/nRiaSct_y1g='
 
 
 
-2. Checking Metrics
+__Checking Metrics__
 
 ##### Request
 ```
